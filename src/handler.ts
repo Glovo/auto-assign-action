@@ -119,6 +119,9 @@ export async function handlePullRequest(
     try {
       await pr.addReviewers(reviewers, teamReviewers)
       core.info(`Added reviewers to PR #${number}: ${reviewers.join(', ')}`)
+      core.info(
+        `Added team reviewers to PR #${number}: ${teamReviewers.join(', ')}`
+      )
     } catch (error) {
       core.warning(error.message)
     }
