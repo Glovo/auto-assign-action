@@ -6,8 +6,10 @@ import { PullRequest } from './pull_request'
 
 export interface Config {
   addReviewers: boolean
+  addTeamReviewers: boolean
   addAssignees: boolean | string
   reviewers: string[]
+  teamReviewers: string[]
   assignees: string[]
   filterLabels?: {
     include?: string[]
@@ -15,6 +17,7 @@ export interface Config {
   }
   numberOfAssignees: number
   numberOfReviewers: number
+  numberOfTeamReviewers: number
   skipKeywords: string[]
   useReviewGroups: boolean
   useAssigneeGroups: boolean
@@ -40,6 +43,7 @@ export async function handlePullRequest(
     reviewGroups,
     assigneeGroups,
     addReviewers,
+    addTeamReviewers,
     addAssignees,
     filterLabels,
     runOnDraft,
@@ -94,15 +98,27 @@ export async function handlePullRequest(
       }
     }
   }
-
+  var reviewers: string[] = []
+  var teamReviewers: string[] = []
   if (addReviewers) {
     try {
-      const reviewers = utils.chooseReviewers(owner, config)
+      reviewers = utils.chooseReviewers(owner, config)
+    } catch (error) {
+      core.warning(error.message)
+    }
+  }
+  if (addTeamReviewers) {
+    try {
+      teamReviewers = utils.chooseTeamReviewers(owner, config)
+    } catch (error) {
+      core.warning(error.message)
+    }
+  }
 
-      if (reviewers.length > 0) {
-        await pr.addReviewers(reviewers)
-        core.info(`Added reviewers to PR #${number}: ${reviewers.join(', ')}`)
-      }
+  if (reviewers.length != 0 || teamReviewers.length != 0) {
+    try {
+      await pr.addReviewers(reviewers, teamReviewers)
+      core.info(`Added reviewers to PR #${number}: ${reviewers.join(', ')}`)
     } catch (error) {
       core.warning(error.message)
     }
